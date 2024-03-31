@@ -216,10 +216,25 @@ prompt_pure_precmd() {
 	# Check if we should display the virtual env. We use a sufficiently high
 	# index of psvar (12) here to avoid collisions with user defined entries.
 	psvar[12]=
+
 	# Check if a Conda environment is active and display its name.
 	if [[ -n $CONDA_DEFAULT_ENV ]]; then
-		psvar[12]="${CONDA_DEFAULT_ENV//[$'\t\r\n']}"
+		if [[ -n $PURE_CONDA_COMPACT_ENV_NAME ]]; then
+			# When PURE_CONDA_COMPACT_ENV_NAME is set, and CONDA_DEFAULT_ENV is a path.
+			if [[ $CONDA_DEFAULT_ENV == /* ]]; then
+				# Extract the last component from the path (the environment name).
+				conda_env_name=$(basename "$CONDA_DEFAULT_ENV")
+				psvar[12]="${conda_env_name//[$'\t\r\n']}"
+			else
+				# CONDA_DEFAULT_ENV is not a full path, use it as is.
+				psvar[12]="${CONDA_DEFAULT_ENV//[$'\t\r\n']}"
+			fi
+		else
+			# PURE_CONDA_COMPACT_ENV_NAME is not set, display CONDA_DEFAULT_ENV as is.
+			psvar[12]="${CONDA_DEFAULT_ENV//[$'\t\r\n']}"
+		fi
 	fi
+
 	# When VIRTUAL_ENV_DISABLE_PROMPT is empty, it was unset by the user and
 	# Pure should take back control.
 	if [[ -n $VIRTUAL_ENV ]] && [[ -z $VIRTUAL_ENV_DISABLE_PROMPT || $VIRTUAL_ENV_DISABLE_PROMPT = 12 ]]; then
